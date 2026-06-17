@@ -1,20 +1,25 @@
 <?php
 
+include 'db.php';
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $usuario = $_POST["usuario"];
     $password = $_POST["password"];
 
-    if ($usuario == "admin" && $password == "1234") {
+    $stmt = $conn->prepare("SELECT id FROM usuarios WHERE nombre = ? AND password = ?");
+    $stmt->bind_param("ss", $usuario, $password);
+    $stmt->execute();
+    $stmt->store_result();
 
+    if ($stmt->num_rows === 1) {
         header("Location: dashboard.php");
         exit();
-
     } else {
-
         $error = "Usuario o contraseña incorrectos";
-
     }
+
+    $stmt->close();
 }
 ?>
 
@@ -36,7 +41,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <h2>INICIO DE SESIÓN</h2>
     <?php
     if(isset($error)){
-        echo "<p>$error</p>";
+        echo "<p class=\"error-message\">$error</p>";
     }
     ?>
 
@@ -59,6 +64,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </button>
 
     </form>
+
+    <p>¿No tienes cuenta? <a href="registro.php">Regístrate aquí</a>.</p>
 
 </div>
 

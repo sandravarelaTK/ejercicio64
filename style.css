@@ -60,6 +60,17 @@ button{
 button:hover{
     background-color: #d32f2f;
 }
+
+.error-message{
+    color: #9d1b1b;
+    background-color: #f5d8d8;
+    border: 1px solid #d18c8c;
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+    font-weight: bold;
+}
+
 table{
     width: 100%;
     margin-top: 20px;
