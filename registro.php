@@ -1,40 +1,25 @@
 <?php
-session_start();
 include 'db.php';
-
 $error = '';
 $success = '';
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    if (isset($_POST['action']) && $_POST['action'] === 'register') {
-        $nombre = trim($_POST['nombre']);
-        $email = trim($_POST['email']);
-        $password = trim($_POST['password']);
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $nombre = mysqli_real_escape_string($conn, $_POST['nombre']);
+    $email = mysqli_real_escape_string($conn, $_POST['email']);
+    $password = mysqli_real_escape_string($conn, $_POST['password']);
 
-        if ($nombre === '' || $email === '' || $password === '') {
-            $error = 'Por favor completa todos los campos para registrarte.';
+    if ($nombre == '' || $email == '' || $password == '') {
+        $error = 'Completa todos los campos.';
+    } else {
+        $sql = "SELECT id FROM usuarios WHERE nombre='$nombre' OR email='$email'";
+        $result = mysqli_query($conn, $sql);
+
+        if (mysqli_num_rows($result) > 0) {
+            $error = 'Usuario o correo ya existe.';
         } else {
-            $stmt = $conn->prepare("SELECT id FROM usuarios WHERE nombre = ? OR email = ?");
-            $stmt->bind_param("ss", $nombre, $email);
-            $stmt->execute();
-            $stmt->store_result();
-
-            if ($stmt->num_rows > 0) {
-                $error = 'El usuario o el correo ya existen. Usa otro nombre o correo.';
-            } else {
-                $stmt->close();
-                $stmt = $conn->prepare("INSERT INTO usuarios (nombre, email, password) VALUES (?, ?, ?)");
-                $stmt->bind_param("sss", $nombre, $email, $password);
-                $stmt->execute();
-                $stmt->close();
-
-                $stmt = $conn->prepare("INSERT INTO users (name, email) VALUES (?, ?)");
-                $stmt->bind_param("ss", $nombre, $email);
-                $stmt->execute();
-                $stmt->close();
-
-                $success = 'Registro exitoso. Ahora puedes iniciar sesión desde el enlace al login.';
-            }
+            mysqli_query($conn, "INSERT INTO usuarios (nombre, email, password) VALUES ('$nombre', '$email', '$password')");
+            mysqli_query($conn, "INSERT INTO users (name, email) VALUES ('$nombre', '$email')");
+            $success = 'Usuario registrado. Ve a login.';
         }
     }
 }
@@ -52,23 +37,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <div class="container">
     <h2>Registro de Usuario</h2>
 
-    <?php if ($error !== ''): ?>
-        <p class="error-message"><?php echo $error; ?></p>
-    <?php endif; ?>
-
-    <?php if ($success !== ''): ?>
-        <p class="success-message"><?php echo $success; ?></p>
-    <?php endif; ?>
+    <?php if ($error != '') { echo "<p class='error-message'>$error</p>"; } ?>
+    <?php if ($success != '') { echo "<p class='success-message'>$success</p>"; } ?>
 
     <form method="POST">
-        <input type="hidden" name="action" value="register">
         <input type="text" name="nombre" placeholder="Nombre" required>
         <input type="email" name="email" placeholder="Correo electrónico" required>
         <input type="password" name="password" placeholder="Contraseña" required>
         <button type="submit">Registrar</button>
     </form>
 
-    <p>¿Ya tienes una cuenta? <a href="login.php">Inicia sesión aquí</a>.</p>
+    <p>¿Ya tienes cuenta? <a href="login.php">Inicia sesión aquí</a>.</p>
 </div>
 
 </body>
