@@ -4,24 +4,28 @@ include 'db.php';
 $error = '';
 
 if (isset($_SESSION['usuario'])) {
-    header('Location: dashboard.php');
+    header('Location: index.php');
     exit();
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $usuario = mysqli_real_escape_string($conn, $_POST['usuario']);
-    $password = mysqli_real_escape_string($conn, $_POST['password']);
+    $usuario = trim($_POST['usuario']);
+    $password = $_POST['password'];
 
-    $sql = "SELECT id FROM usuarios WHERE nombre='$usuario' AND password='$password'";
+    $usuario_safe = mysqli_real_escape_string($conn, $usuario);
+    $sql = "SELECT password FROM usuarios WHERE LOWER(nombre)=LOWER('$usuario_safe') OR LOWER(email)=LOWER('$usuario_safe')";
     $result = mysqli_query($conn, $sql);
 
     if (mysqli_num_rows($result) == 1) {
-        $_SESSION['usuario'] = $usuario;
-        header('Location: dashboard.php');
-        exit();
-    } else {
-        $error = 'Usuario o contraseña incorrectos';
+        $row = mysqli_fetch_assoc($result);
+        if (password_verify($password, $row['password'])) {
+            $_SESSION['usuario'] = $usuario;
+            header('Location: index.php');
+            exit();
+        }
     }
+
+    $error = 'Usuario o contraseña incorrectos';
 }
 ?>
 
@@ -43,7 +47,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <button type="submit">INICIAR SESIÓN</button>
     </form>
 
-    <p>¿No tienes cuenta? <a href="registro.php">Regístrate aquí</a>.</p>
 </div>
 </body>
 </html>
