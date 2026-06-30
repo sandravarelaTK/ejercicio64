@@ -2,34 +2,39 @@
 session_start();
 include 'db.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
-    if (stripos($accept, 'application/json') !== false || stripos($accept, 'text/html') === false) {
-        header('Content-Type: application/json; charset=utf-8');
-        $result = mysqli_query($conn, "SELECT id, name, email FROM users ORDER BY id DESC");
-        if (!$result) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'No se pudo consultar la tabla users'], JSON_UNESCAPED_UNICODE);
-            exit();
-        }
-        $users = [];
-        while ($row = mysqli_fetch_assoc($result)) {
-            $users[] = $row;
-        }
-        echo json_encode(['success' => true, 'data' => $users], JSON_UNESCAPED_UNICODE);
+function wantsJson()
+{
+    return isset($_GET['format']) && $_GET['format'] === 'json';
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && wantsJson()) {
+    header('Content-Type: application/json; charset=utf-8');
+    $result = mysqli_query($conn, "SELECT id, name, email FROM users ORDER BY id DESC");
+    if (!$result) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'No se pudo consultar la tabla users'], JSON_UNESCAPED_UNICODE);
         exit();
     }
+    $users = [];
+    while ($row = mysqli_fetch_assoc($result)) {
+        $users[] = $row;
+    }
+    echo json_encode(['success' => true, 'data' => $users], JSON_UNESCAPED_UNICODE);
+    exit();
 }
 
 if (!isset($_SESSION['usuario'])) {
     header('Location: login.php');
     exit();
 }
+
+header('Content-Type: text/html; charset=utf-8');
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Formulario Sandra Varela</title>
     <link rel="stylesheet" href="style.css">
 </head>
