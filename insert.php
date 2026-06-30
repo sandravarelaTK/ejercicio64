@@ -5,7 +5,9 @@ include 'db.php';
 
 function wantsJson()
 {
-    return isset($_SERVER['HTTP_ACCEPT']) && stripos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false;
+    $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+    return stripos($accept, 'application/json') !== false
+        || stripos($accept, 'text/html') === false;
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
