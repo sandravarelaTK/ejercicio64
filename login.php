@@ -21,20 +21,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
 
     if ($usuario !== '' && $password !== '') {
-        $usuario_safe = mysqli_real_escape_string($conn, $usuario);
-        $sql = "SELECT password FROM usuarios WHERE LOWER(nombre)=LOWER('$usuario_safe') OR LOWER(email)=LOWER('$usuario_safe') LIMIT 1";
-        $result = mysqli_query($conn, $sql);
+        $usuario_safe = $conn->real_escape_string($usuario);
+        $sql = "SELECT id, nombre, email, password FROM usuarios WHERE LOWER(nombre)=LOWER('$usuario_safe') OR LOWER(email)=LOWER('$usuario_safe') LIMIT 1";
+        $result = $conn->query($sql);
 
-        if ($result && mysqli_num_rows($result) > 0) {
-            $row = mysqli_fetch_assoc($result);
+        if ($result && $result->num_rows > 0) {
+            $row = $result->fetch_assoc();
             if (password_verify($password, $row['password'])) {
-                $_SESSION['usuario'] = $usuario;
+                $_SESSION['usuario'] = $row['nombre'];
+                $_SESSION['usuario_id'] = $row['id'];
+                $_SESSION['rol'] = 'admin';
                 if (wantsJson()) {
                     header('Content-Type: application/json; charset=utf-8');
                     echo json_encode(['success' => true, 'message' => 'Login exitoso']);
                     exit();
                 }
-                header('Location: index.php');
+                header('Location: dashboard.php');
                 exit();
             }
         }
@@ -64,11 +66,10 @@ if (!wantsJson()) {
     <h2>INICIO DE SESIÓN</h2>
 
     <form method="POST">
-        <input type="text" name="usuario" placeholder="Usuario" required>
+        <input type="text" name="usuario" placeholder="Usuario o correo" required>
         <input type="password" name="password" placeholder="Contraseña" required>
         <button type="submit">INICIAR SESIÓN</button>
     </form>
-
 </div>
 </body>
 </html>

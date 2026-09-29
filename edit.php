@@ -1,25 +1,20 @@
-
 <?php
 
+session_start();
 include 'db.php';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $id = (int)($_POST['id'] ?? 0);
+    $nombre = trim($_POST['nombre'] ?? '');
+    $email = trim($_POST['email'] ?? '');
 
-    $id = $_POST['id'];
-    $name = $_POST['name'];
-    $email = $_POST['email'];
-
-    $sql = "UPDATE users 
-            SET name='$name', email='$email' 
-            WHERE id=$id";
-
-    mysqli_query($conn, $sql);
-
-    header("Location: index.php");
-    exit();
+    if ($id > 0 && $nombre !== '' && $email !== '') {
+        $stmt = $conn->prepare("UPDATE usuarios SET nombre = ?, email = ? WHERE id = ?");
+        $stmt->bind_param('ssi', $nombre, $email, $id);
+        $stmt->execute();
+        $stmt->close();
+    }
 }
 
-header("Location: index.php");
+header('Location: index.php');
 exit();
-
-?>

@@ -2,16 +2,27 @@
 
 include 'db.php';
 
-$name = $_REQUEST['name'];
-$email = $_REQUEST['email'];
+$nombre = trim($_POST['nombre'] ?? '');
+$email = trim($_POST['email'] ?? '');
+$password = $_POST['password'] ?? '';
+$rol = trim($_POST['rol'] ?? 'usuario');
 
-$name_safe = mysqli_real_escape_string($conn, $name);
-$email_safe = mysqli_real_escape_string($conn, $email);
+if ($nombre === '' || $email === '' || $password === '' || $rol === '') {
+    header('Location: index.php');
+    exit();
+}
 
-$sql = "INSERT INTO users (name, email) VALUES ('$name_safe', '$email_safe')";
+$hash = password_hash($password, PASSWORD_DEFAULT);
+$stmt = $conn->prepare("INSERT INTO usuarios (nombre, email, password, rol, estado) VALUES (?, ?, ?, ?, 'activo')");
+$stmt->bind_param('ssss', $nombre, $email, $hash, $rol);
 
-$conn->query($sql);
+if ($stmt->execute()) {
+    $_SESSION['mensaje'] = 'Usuario agregado correctamente';
+} else {
+    $_SESSION['mensaje'] = 'No se pudo crear el usuario: ' . $conn->error;
+}
 
-header("Location: index.php");
-
-?>
+$stmt->close();
+$conn->close();
+header('Location: index.php');
+exit();

@@ -2,13 +2,14 @@
 
 include 'db.php';
 
-$id = $_GET['id'];
+$id = (int)($_GET['id'] ?? 0);
 
-$sql = "DELETE FROM users WHERE id = $id";
+if ($id > 0) {
+    $stmt = $conn->prepare("DELETE FROM usuarios WHERE id = ?");
+    $stmt->bind_param('i', $id);
+    $stmt->execute();
+    $stmt->close();
+}
 
-mysqli_query($conn, $sql);
-
-header("Location: index.php");
+header('Location: index.php');
 exit();
-
-?>
